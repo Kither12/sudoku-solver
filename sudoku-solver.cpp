@@ -27,13 +27,13 @@ int block_elements[9][9][2] = {
 int encode_table[9][9];
 int encode_row[9], encode_column[9], encode_block[9];
 int prefix_row[9][9], prefix_column[9][9], prefix_block[9][9];
-
+//hello
 void read_input(){
     freopen("input.txt", "r", stdin);
     for(int i = 0; i < 9; ++i){
-        for(int j = 0; j < 9; ++j)[
+        for(int j = 0; j < 9; ++j){
             std::cin >> main_table[i][j];
-        ]
+        }
     }
 }
 void initiation(){
@@ -124,6 +124,7 @@ int update(){
     return score;
 }
 int main(){
+    read_input();
     do{
         initiation();
         calculate();
