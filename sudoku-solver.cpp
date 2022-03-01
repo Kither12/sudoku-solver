@@ -24,16 +24,26 @@ int block_elements[9][9][2] = {
     {{6, 3}, {6, 4}, {6, 5}, {7, 3}, {7, 4}, {7, 5}, {7, 3}, {7, 4}, {7, 5}},
     {{6, 6}, {6, 7}, {6, 8}, {7, 6}, {7, 7}, {7, 8}, {7, 6}, {7, 7}, {7, 8}}
 };
+
 int encode_table[9][9];
 int encode_row[9], encode_column[9], encode_block[9];
 int prefix_row[9][9], prefix_column[9][9], prefix_block[9][9];
-//hello
+
 void read_input(){
     freopen("input.txt", "r", stdin);
     for(int i = 0; i < 9; ++i){
         for(int j = 0; j < 9; ++j){
             std::cin >> main_table[i][j];
         }
+    }
+}
+void write_answer(){
+    freopen("output.txt", "w", stdout);
+    for(int i = 0; i < 9; ++i){
+        for(int j = 0; j < 9; ++j){
+            std::cout << main_table[i][j] << " ";
+        }
+        std::cout << std::endl;
     }
 }
 void initiation(){
@@ -130,12 +140,6 @@ int main(){
         calculate();
     }
     while(update());
-    for(int i = 0; i < 9; ++i){
-        for(int j = 0; j < 9; ++j){
-            std::cout << main_table[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
-    //std::cout << prefix_block[4][0];
+    write_answer();
     return 0;
 }
