@@ -59,9 +59,7 @@ void initiation(){
         }
     }
 }
-
-void calculate(){
-
+void encoding(){
     // encoding rows, columns, blocks
     for(int i = 0; i < 9; ++i){
         for(int j = 0; j < 9; ++j){
@@ -84,7 +82,9 @@ void calculate(){
             }
         }
     }
-
+}
+void calculate(){
+    
     //calculate the prefix for each rows columns and blocks
     for(int num = 0; num < 9; ++num){
         for(int i = 0; i < 9; ++i){
@@ -137,6 +137,7 @@ int main(){
     read_input();
     do{
         initiation();
+        encoding();
         calculate();
     }
     while(update());
