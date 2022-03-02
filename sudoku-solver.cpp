@@ -17,17 +17,17 @@ int block_elements[9][9][2] = {
     {{0, 0}, {0, 1}, {0, 2}, {1, 0}, {1, 1}, {1, 2}, {2, 0}, {2, 1}, {2, 2}},
     {{0, 3}, {0, 4}, {0, 5}, {1, 3}, {1, 4}, {1, 5}, {2, 3}, {2, 4}, {2, 5}},
     {{0, 6}, {0, 7}, {0, 8}, {1, 6}, {1, 7}, {1, 8}, {2, 6}, {2, 7}, {2, 8}},
-    {{3, 0}, {3, 1}, {3, 2}, {4, 0}, {4, 1}, {4, 2}, {4, 0}, {4, 1}, {4, 2}},
-    {{3, 3}, {3, 4}, {3, 5}, {4, 3}, {4, 4}, {4, 5}, {4, 3}, {4, 4}, {4, 5}},
-    {{3, 6}, {3, 7}, {3, 8}, {4, 6}, {4, 7}, {4, 8}, {4, 6}, {4, 7}, {4, 8}},
-    {{6, 0}, {6, 1}, {6, 2}, {7, 0}, {7, 1}, {7, 2}, {7, 0}, {7, 1}, {7, 2}},
-    {{6, 3}, {6, 4}, {6, 5}, {7, 3}, {7, 4}, {7, 5}, {7, 3}, {7, 4}, {7, 5}},
-    {{6, 6}, {6, 7}, {6, 8}, {7, 6}, {7, 7}, {7, 8}, {7, 6}, {7, 7}, {7, 8}}
+    {{3, 0}, {3, 1}, {3, 2}, {4, 0}, {4, 1}, {4, 2}, {5, 0}, {5, 1}, {5, 2}},
+    {{3, 3}, {3, 4}, {3, 5}, {4, 3}, {4, 4}, {4, 5}, {5, 3}, {5, 4}, {5, 5}},
+    {{3, 6}, {3, 7}, {3, 8}, {4, 6}, {4, 7}, {4, 8}, {5, 6}, {5, 7}, {5, 8}},
+    {{6, 0}, {6, 1}, {6, 2}, {7, 0}, {7, 1}, {7, 2}, {8, 0}, {8, 1}, {8, 2}},
+    {{6, 3}, {6, 4}, {6, 5}, {7, 3}, {7, 4}, {7, 5}, {8, 3}, {8, 4}, {8, 5}},
+    {{6, 6}, {6, 7}, {6, 8}, {7, 6}, {7, 7}, {7, 8}, {8, 6}, {8, 7}, {8, 8}}
 };
 
 int encode_table[9][9];
 int encode_row[9], encode_column[9], encode_block[9];
-int prefix_row[9][9], prefix_column[9][9], prefix_block[9][9];
+int prefix_row[9][9][9], prefix_column[9][9][9], prefix_block[9][9];
 
 void read_input(){
     freopen("input.txt", "r", stdin);
@@ -53,14 +53,15 @@ void initiation(){
         encode_block[i] = 0;
         for(int j = 0; j < 9; ++j){
             encode_table[i][j] = 0;
-            prefix_row[i][j] = 0;
-            prefix_column[i][j] = 0;
             prefix_block[i][j] = 0;
+            for(int num = 0; num < 9; ++num){
+                prefix_row[i][j][num] = 0;
+                prefix_column[i][j][num] = 0;
+            }
         }
     }
 }
-void encoding(){
-    // encoding rows, columns, blocks
+void overall_ecode(){
     for(int i = 0; i < 9; ++i){
         for(int j = 0; j < 9; ++j){
             if(main_table[i][j] == 0) continue;
@@ -70,8 +71,8 @@ void encoding(){
             encode_block[block_index[i][j]] = encode_block[block_index[i][j]]  | encode_table[i][j];
         }
     }
-
-    //encoding for each cells
+}
+void cell_encode(){
     for(int i = 0; i < 9; ++i){
         for(int j = 0; j < 9; ++j){
             if(encode_table[i][j] != 0){
@@ -84,28 +85,90 @@ void encoding(){
     }
 }
 void calculate(){
-    
     //calculate the prefix for each rows columns and blocks
     for(int num = 0; num < 9; ++num){
         for(int i = 0; i < 9; ++i){
             for(int j = 0; j < 9; ++j){
                 if(!(1 & (encode_table[i][j] >> (num + 1)))){
-                    ++prefix_row[num][i];
-                    ++prefix_column[num][j];
+                    prefix_row[num][i][j] = 1;
+                    prefix_column[num][j][i] = 1;
                     ++prefix_block[num][block_index[i][j]];
                 }
             }
         }
     }
+    for(int num = 0; num < 9; ++num){
+        for(int i = 0; i < 9; ++i){
+            for(int j = 1; j < 9; ++j){
+                prefix_row[num][i][j] += prefix_row[num][i][j - 1];
+                prefix_column[num][i][j] += prefix_column[num][i][j - 1];
+            }
+        }
+    }
+    //check if we can get more information from all possible blank from row and column be exactly in one block
+    //this computation step can help strategy_1 go faster 2 - 3 times and find out some special cell
+    for(int num = 0; num < 9; ++num){
+        for(int index = 0; index < 9; ++index){
+            if(prefix_column[num][index][8] > 0 && prefix_column[num][index][8] < 4){
+                //block 0
+                if(prefix_column[num][index][2] == prefix_column[num][index][8]){
+                    for(int i = 0; i < 9; ++i){
+                        if(block_elements[index / 3][i][1] == index) continue;
+                        encode_table[block_elements[index / 3][i][0]][block_elements[index / 3][i][1]] |= (1 << (num + 1));
+                    }
+                }
+                //block 1
+                if(prefix_column[num][index][5] -  prefix_column[num][index][2] == prefix_column[num][index][8]){
+                    for(int i = 0; i < 9; ++i){
+                        if(block_elements[index / 3 + 3][i][1] == index) continue;
+                        encode_table[block_elements[index / 3 + 3][i][0]][block_elements[index / 3 + 3][i][1]] |= (1 << (num + 1));
+                    }
+                }
+                //block 2
+                if(prefix_column[num][index][8] -  prefix_column[num][index][5] == prefix_column[num][index][8]){
+                    for(int i = 0; i < 9; ++i){
+                        if(block_elements[index / 3 + 6][i][1] == index) continue;
+                        encode_table[block_elements[index / 3 + 6][i][0]][block_elements[index / 3 + 6][i][1]] |= (1 << (num + 1));
+                        std::cout << num + 1 << " " << block_elements[index / 3 + 6][i][0] << " " << block_elements[index / 3 + 6][i][1] << "\n";
+                    }
+                }
+            }
+        }
+    }
+    for(int i = 0; i < 9; ++i){
+        for(int j = 0; j < 9; ++j){
+            for(int num = 0; num < 9; ++num){
+                prefix_row[i][j][num] = 0;
+                prefix_column[i][j][num] = 0;
+            }
+        }
+    }
+    for(int num = 0; num < 9; ++num){
+        for(int i = 0; i < 9; ++i){
+            for(int j = 0; j < 9; ++j){
+                if(!(1 & (encode_table[i][j] >> (num + 1)))){
+                    prefix_row[num][i][j] = 1;
+                    prefix_column[num][j][i] = 1;
+                    ++prefix_block[num][block_index[i][j]];
+                }
+            }
+        }
+    }
+    for(int num = 0; num < 9; ++num){
+        for(int i = 0; i < 9; ++i){
+            for(int j = 1; j < 9; ++j){
+                prefix_row[num][i][j] += prefix_row[num][i][j - 1];
+                prefix_column[num][i][j] += prefix_column[num][i][j - 1];
+            }
+        }
+    }
 }
-
-int update(){
-    //update when prefix[num] = 1
-    // this function return score for each update
+int strategy_1(){
+    //this strategy will look into each number and find any rows, columns, blocks that have exactly one possible blank to fill that number
     int score = 0;
     for(int num = 0; num < 9; ++num){
         for(int index = 0; index < 9; ++index){
-            if(prefix_row[num][index] == 1){
+            if(prefix_row[num][index][8] == 1){
                 for(int i = 0; i < 9; ++i){
                     if(!(1 & (encode_table[index][i] >> (num + 1)))){
                         main_table[index][i] = (num + 1);
@@ -113,7 +176,7 @@ int update(){
                     }
                 }
             }
-            if(prefix_column[num][index] == 1){
+            if(prefix_column[num][index][8] == 1){
                 for(int i = 0; i < 9; ++i){
                     if(!(1 & (encode_table[i][index] >> (num + 1)))){
                         main_table[i][index] = (num + 1);
@@ -133,11 +196,16 @@ int update(){
     }
     return score;
 }
+bool update(){
+    if(strategy_1()) return true;
+    return false;
+}
 int main(){
     read_input();
     do{
         initiation();
-        encoding();
+        overall_ecode();
+        cell_encode();
         calculate();
     }
     while(update());
