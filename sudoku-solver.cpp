@@ -107,6 +107,7 @@ void calculate(){
     }
     //check if we can get more information from all possible blank from row and column be exactly in one block
     //this computation step can help strategy_1 go faster 2 - 3 times and find out some special cell
+    //i think it is possible to loop this process several times to make the calculating process stronger
     for(int num = 0; num < 9; ++num){
         for(int index = 0; index < 9; ++index){
             if(prefix_column[num][index][8] > 0 && prefix_column[num][index][8] < 4){
@@ -129,12 +130,35 @@ void calculate(){
                     for(int i = 0; i < 9; ++i){
                         if(block_elements[index / 3 + 6][i][1] == index) continue;
                         encode_table[block_elements[index / 3 + 6][i][0]][block_elements[index / 3 + 6][i][1]] |= (1 << (num + 1));
-                        std::cout << num + 1 << " " << block_elements[index / 3 + 6][i][0] << " " << block_elements[index / 3 + 6][i][1] << "\n";
+                    }
+                }
+            }
+            if(prefix_row[num][index][8] > 0 && prefix_row[num][index][8] < 4){
+                //block 0
+                if(prefix_row[num][index][2] == prefix_row[num][index][8]){
+                    for(int i = 0; i < 9; ++i){
+                        if(block_elements[(index / 3) * 3][i][0] == index) continue;
+                        encode_table[block_elements[(index / 3) * 3][i][0]][block_elements[(index / 3) * 3][i][1]] |= (1 << (num + 1));
+                    }
+                }
+                //block 1
+                if(prefix_row[num][index][5] -  prefix_row[num][index][2] == prefix_row[num][index][8]){
+                    for(int i = 0; i < 9; ++i){
+                        if(block_elements[(index / 3) * 3 + 1][i][0] == index) continue;
+                        encode_table[block_elements[(index / 3) * 3 + 1][i][0]][block_elements[(index / 3) * 3 + 1][i][1]] |= (1 << (num + 1));
+                    }
+                }
+                //block 2
+                if(prefix_row[num][index][8] -  prefix_row[num][index][5] == prefix_row[num][index][8]){
+                    for(int i = 0; i < 9; ++i){
+                        if(block_elements[(index / 3) * 3 + 2][i][0] == index) continue;
+                        encode_table[block_elements[(index / 3) * 3 + 2][i][0]][block_elements[(index / 3) * 3 + 2][i][1]] |= (1 << (num + 1));
                     }
                 }
             }
         }
     }
+    //reseting the prefix after update
     for(int i = 0; i < 9; ++i){
         for(int j = 0; j < 9; ++j){
             for(int num = 0; num < 9; ++num){
@@ -202,13 +226,16 @@ bool update(){
 }
 int main(){
     read_input();
+    int cnt = 0;
     do{
         initiation();
         overall_ecode();
         cell_encode();
         calculate();
+        ++cnt;
     }
     while(update());
     write_answer();
+    std::cout << cnt;
     return 0;
 }
