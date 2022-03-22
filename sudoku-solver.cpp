@@ -84,8 +84,7 @@ void cell_encode(){
         }
     }
 }
-void calculate(){
-    //calculate the prefix for each rows columns and blocks
+void compute_prefix(){
     for(int num = 0; num < 9; ++num){
         for(int i = 0; i < 9; ++i){
             for(int j = 0; j < 9; ++j){
@@ -105,9 +104,12 @@ void calculate(){
             }
         }
     }
+}
+void calculate(){
     //check if we can get more information from all possible blank from row and column be exactly in one block
     //this computation step can help strategy_1 go faster 2 - 3 times and find out some special cell
     //i think it is possible to loop this process several times to make the calculating process stronger
+    compute_prefix();
     for(int num = 0; num < 9; ++num){
         for(int index = 0; index < 9; ++index){
             if(prefix_column[num][index][8] > 0 && prefix_column[num][index][8] < 4){
@@ -167,27 +169,9 @@ void calculate(){
             }
         }
     }
-    for(int num = 0; num < 9; ++num){
-        for(int i = 0; i < 9; ++i){
-            for(int j = 0; j < 9; ++j){
-                if(!(1 & (encode_table[i][j] >> (num + 1)))){
-                    prefix_row[num][i][j] = 1;
-                    prefix_column[num][j][i] = 1;
-                    ++prefix_block[num][block_index[i][j]];
-                }
-            }
-        }
-    }
-    for(int num = 0; num < 9; ++num){
-        for(int i = 0; i < 9; ++i){
-            for(int j = 1; j < 9; ++j){
-                prefix_row[num][i][j] += prefix_row[num][i][j - 1];
-                prefix_column[num][i][j] += prefix_column[num][i][j - 1];
-            }
-        }
-    }
+    compute_prefix();
 }
-int strategy_1(){
+int update(){
     //this strategy will look into each number and find any rows, columns, blocks that have exactly one possible blank to fill that number
     int score = 0;
     for(int num = 0; num < 9; ++num){
@@ -218,11 +202,19 @@ int strategy_1(){
             }
         }
     }
+    for(int i = 0; i < 9; ++i){
+        for(int j = 0; j < 9; ++j){
+            if(__builtin_popcount(encode_table[i][j]) == 8){
+                for(int num = 0; num < 9; ++num){
+                    if(!(1 & (encode_table[i][j] >> (num + 1)))){
+                        main_table[i][j] = num + 1;
+                        ++score;
+                    }
+                }
+            }
+        }
+    }
     return score;
-}
-bool update(){
-    if(strategy_1()) return true;
-    return false;
 }
 int main(){
     read_input();
