@@ -228,6 +228,12 @@ int main(){
     }
     while(update());
     write_answer();
-    std::cout << cnt;
+    std::cout << cnt << "\n";
+    for(int i = 0; i < 9; ++i){
+        for(int j = 0; j < 9; ++j){
+            std::cout << encode_table[i][j] << " ";
+        }
+        std::cout << "\n";
+    }
     return 0;
 }
